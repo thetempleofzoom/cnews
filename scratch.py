@@ -11,7 +11,7 @@ def upload_settings():
     dfdict = df.set_index('baseurl').to_dict()
     print(dfdict['path'])
 
-    for k,v in dfdict['path']:
+    for k,v in dfdict['path'].items():
         if len(v) == 0:
             dfdict['path'][k] = k
         else:
