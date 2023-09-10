@@ -8,16 +8,17 @@ import pickle, pandas as pd
 def upload_settings():
     df = pd.read_excel("readinglist.xlsx", sheet_name="Sheet1")
     df.path = df.path.fillna('')
-    dfdict = dict([(i, [v, w, x, y, z]) for i, v, w, x, y, z in
-                   zip(df.baseurl, df.name, df.path, df.tag, df.filter, df.topic)])
-    for k, v in dfdict.items():
-        if len(v[1]) == 0:
-            v[1] = k+v[1]
+    dfdict = df.set_index('baseurl').to_dict()
+    print(dfdict['path'])
+
+    for k,v in dfdict['path']:
+        if len(v) == 0:
+            dfdict['path'][k] = k
         else:
-            v[1] = v[1].split(',')
-            v[1] = [k+cat.strip() for cat in v[1]]
-    pprint(dfdict)
-    return dfdict
+            v = v.split(',')
+            dfdict['path'][k] = [k+cat.strip() for cat in v]
+
+    pprint(dfdict['path'])
 
     
 
@@ -35,6 +36,7 @@ def getLinks(url):
     soup = BeautifulSoup(content, "html.parser")
 
     #create loop here
+    links = []
     tag = 'div'
     filter = {"class": "BlogList-item-image"}
 
@@ -79,6 +81,6 @@ def compare(current):
 
 #new = compare(getLinks("http://syedsoutsidethebox.blogspot.com/"))
 #send_mail(new)
-getLinks("http://jeffsachs.org/interviewsandmedia")
-#upload_settings()
+#getLinks("http://jeffsachs.org/interviewsandmedia")
+upload_settings()
 
