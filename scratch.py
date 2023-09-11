@@ -2,59 +2,70 @@ from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
 from urllib.parse import urlparse
 from pprint import pprint
-from runemail import send_mail
+from tasks import send_mail
 import pickle, pandas as pd
 
 def upload_settings():
     df = pd.read_excel("readinglist.xlsx", sheet_name="Sheet1")
     df.path = df.path.fillna('')
-    dfdict = df.set_index('baseurl').to_dict()
-    print(dfdict['path'])
+    #orient=index is key to getting all other columns into v side of things
+    dfdict = df.set_index('baseurl').to_dict(orient='index')
 
-    for k,v in dfdict['path'].items():
-        if len(v) == 0:
-            dfdict['path'][k] = k
+    for k,v in dfdict.items():
+        #get full webpage links
+        if len(v['path']) == 0:
+            dfdict[k]['path'] = [k]
         else:
-            v = v.split(',')
-            dfdict['path'][k] = [k+cat.strip() for cat in v]
+            v['path'] = v['path'].split(',')
+            dfdict[k]['path'] = [k+cat.strip() for cat in v['path']]
+        #convert attribute tags into dictionary item
+        v['filter'] = v['filter'].split(',')
+        dfdict[k]['filter'] = [cat.strip() for cat in v['filter']]
+        x = iter(v['filter'])
+        v['filter'] = dict(zip(x,x))
 
-    pprint(dfdict['path'])
+    #pprint(dfdict)
+    return dfdict
 
-    
 
-def getLinks(url):
+def getLinks(dfdict):
     #this list will house all current links from various websites
     snapshotnow = []
 
-    USER_AGENT = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5'
-    request = Request(url)
-    request.add_header('User-Agent', USER_AGENT)
-    response = urlopen(request)
-    content = response.read().decode('utf-8')
-    response.close()
+    for k,v in dfdict.items():
+        try:
+            print(f"running {v['name']}")
+            for url in v['path']:
+                USER_AGENT = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5'
+                request = Request(url)
+                request.add_header('User-Agent', USER_AGENT)
+                response = urlopen(request)
+                content = response.read().decode('utf-8')
+                response.close()
 
-    soup = BeautifulSoup(content, "html.parser")
+                soup = BeautifulSoup(content, "html.parser")
 
-    #create loop here
-    links = []
-    tag = 'div'
-    filter = {"class": "BlogList-item-image"}
+                links = []
+                tag = v['tag']
+                filter = v['filter']
 
-    dsoup = soup.find_all(tag, **filter)
+                dsoup = soup.find_all(tag, **filter)
 
-    for d in dsoup:
-        links.append(d.find('a', href=True))
+                for d in dsoup:
+                    links.append(d.find('a', href=True))
 
-    for link in links:
-        title = link.get_text() #alternatively link.string
-        if link.get("href").startswith("/"):
-            res = urlparse(url)
-            longlink = res.scheme+'://'+ res.netloc + link.get("href")
-        else:
-            longlink = link.get("href")
-        print(longlink)
-        snapshotnow.append((longlink, title))
-
+                for link in links:
+                    title = link.get_text() #alternatively link.string
+                    if link.get("href").startswith("/"):
+                        res = urlparse(url)
+                        longlink = res.scheme+'://'+ res.netloc + link.get("href")
+                    else:
+                        longlink = link.get("href")
+                    print(longlink)
+                    snapshotnow.append((k, title, longlink))
+        except:
+            print(f"error with {v['name']}. continuing to the next link..")
+            continue
     return snapshotnow
 
 def compare(current):
@@ -81,6 +92,13 @@ def compare(current):
 
 #new = compare(getLinks("http://syedsoutsidethebox.blogspot.com/"))
 #send_mail(new)
-#getLinks("http://jeffsachs.org/interviewsandmedia")
-upload_settings()
 
+
+#dfdict = upload_settings()
+#with open('dfdict.pkl', 'wb') as file:
+#    pickle.dump(dfdict, file)
+
+with open('dfdict.pkl', 'rb') as file:
+    dfdict = pickle.load(file)
+#pprint(dfdict)
+getLinks(dfdict)

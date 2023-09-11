@@ -1,6 +1,16 @@
 import smtplib, os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import pickle
+
+def pickledown(input, pklfile):
+    with open(pklfile, 'wb') as f:
+        pickle.dump(input, f)
+
+def pickleup(pklfile):
+    with open(pklfile, 'rb') as f:
+        res = pickle.load(f)
+    return res
 
 def send_mail(new):
     # me == my email address
