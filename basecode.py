@@ -15,8 +15,8 @@ def getLinks(url):
     soup = BeautifulSoup(content, "html.parser")
 
     #links = soup.find_all("a") # Find all elements with the tag <a>
-    links = soup.find_all('h2', attrs={"class": "entry-title"})
-
+    links = soup.find_all("a", attrs={"class": "BlogList-item-title"})
+    print(links)
     for link in links:
         if link.get("href").startswith("/"):
             res = urlparse(url)
@@ -27,4 +27,4 @@ def getLinks(url):
         print("Link:", longlink, "Text:", link.string)
 
 
-getLinks("https://www.lynalden.com/")
+getLinks("https://www.jeffsachs.org/newspaper-articles")

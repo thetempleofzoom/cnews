@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
 from urllib.parse import urlparse
 from pprint import pprint
-from tasks import send_mail
+from tasks import *
 import pickle, pandas as pd
 
 def upload_settings():
@@ -21,10 +21,11 @@ def upload_settings():
         #convert attribute tags into dictionary item
         v['filter'] = v['filter'].split(',')
         dfdict[k]['filter'] = [cat.strip() for cat in v['filter']]
+        if v['filter'][1] == 'True': v['filter'][1] = True
         x = iter(v['filter'])
         v['filter'] = dict(zip(x,x))
 
-    #pprint(dfdict)
+    pprint(dfdict)
     return dfdict
 
 
@@ -51,17 +52,23 @@ def getLinks(dfdict):
 
                 dsoup = soup.find_all(tag, **filter)
 
+
                 for d in dsoup:
-                    links.append(d.find('a', href=True))
+                    line = d.find('a', href=True)
+                    text = line.text.strip()
+                    if not text:
+                        line = d.find('a', {'class':'BlogList-item-title'})
+                    links.append(line)
+                #pprint(links)
 
                 for link in links:
-                    title = link.get_text() #alternatively link.string
+                    title = link.text.strip() #alternatively link.get_text()
+                    print(title)
                     if link.get("href").startswith("/"):
                         res = urlparse(url)
                         longlink = res.scheme+'://'+ res.netloc + link.get("href")
                     else:
                         longlink = link.get("href")
-                    print(longlink)
                     snapshotnow.append((k, title, longlink))
         except:
             print(f"error with {v['name']}. continuing to the next link..")
@@ -90,15 +97,21 @@ def compare(current):
 
     return new
 
+upload_settings()
+#dfdict = upload_settings()
+#pickledown(dfdict, 'dfdict.pkl')
+
+dfdict =  {'https://www.jeffsachs.org/': {'filter': {'id': True},
+                                'name': 'Jeffrey Sachs',
+                                'path': ['https://www.jeffsachs.org/recorded-lectures',
+                                         'https://www.jeffsachs.org/interviewsandmedia',
+                                         'https://www.jeffsachs.org/newspaper-articles'],
+                                'tag': 'article',
+                                'topic': 'world_affairs'}}
+#dfdict = pickleup('dfdict.pkl')
+
+#pprint(dfdict)
+#current = getLinks(dfdict)
 #new = compare(getLinks("http://syedsoutsidethebox.blogspot.com/"))
 #send_mail(new)
-
-
-#dfdict = upload_settings()
-#with open('dfdict.pkl', 'wb') as file:
-#    pickle.dump(dfdict, file)
-
-with open('dfdict.pkl', 'rb') as file:
-    dfdict = pickle.load(file)
-#pprint(dfdict)
-getLinks(dfdict)
+#pprint(current)
