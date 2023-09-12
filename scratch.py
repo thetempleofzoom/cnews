@@ -25,7 +25,6 @@ def upload_settings():
         x = iter(v['filter'])
         v['filter'] = dict(zip(x,x))
 
-    pprint(dfdict)
     return dfdict
 
 
@@ -63,7 +62,6 @@ def getLinks(dfdict):
 
                 for link in links:
                     title = link.text.strip() #alternatively link.get_text()
-                    print(title)
                     if link.get("href").startswith("/"):
                         res = urlparse(url)
                         longlink = res.scheme+'://'+ res.netloc + link.get("href")
@@ -75,43 +73,39 @@ def getLinks(dfdict):
             continue
     return snapshotnow
 
-def compare(current):
+def compare(snapshotnow, snapshotzero):
     # compare snapshot against current links
-    with open('ostb.pkl', 'rb') as file:
-        snapshotzero = pickle.load(file)
 
     #use url as unique identifier
     previous = []
     for s in snapshotzero:
-        previous.append(s[0])
+        previous.append(s[2])
 
     new = []
-    for c in current:
-        if c[0] in previous:
+    for c in snapshotnow:
+        if c[2] in previous:
             continue
         else:
             new.append(c)
 
-    with open('ostb.pkl', 'wb') as file:
-        pickle.dump(current, file)
-
     return new
 
-upload_settings()
+
 #dfdict = upload_settings()
 #pickledown(dfdict, 'dfdict.pkl')
 
-dfdict =  {'https://www.jeffsachs.org/': {'filter': {'id': True},
-                                'name': 'Jeffrey Sachs',
-                                'path': ['https://www.jeffsachs.org/recorded-lectures',
-                                         'https://www.jeffsachs.org/interviewsandmedia',
-                                         'https://www.jeffsachs.org/newspaper-articles'],
-                                'tag': 'article',
-                                'topic': 'world_affairs'}}
 #dfdict = pickleup('dfdict.pkl')
 
 #pprint(dfdict)
-#current = getLinks(dfdict)
-#new = compare(getLinks("http://syedsoutsidethebox.blogspot.com/"))
-#send_mail(new)
-#pprint(current)
+#snapshotnow = getLinks(dfdict)
+
+# snapshotnow = pickleup('snapshotnow.pkl')
+# snapshotzero = pickleup('dummy.pkl')
+# new = compare(snapshotnow, snapshotzero)
+#pickledown(new, 'new.pkl')
+#pickledown(snapshotnow, 'snapshotzero.pkl')
+#testnew(new, dfdict)
+#  consolidate inputs for email into one dictionary
+#  loop by topic, then by blog (w link), then new articles (title followed by longlink)
+        
+#send_mail(new, dfdict)

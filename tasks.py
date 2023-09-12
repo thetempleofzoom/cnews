@@ -2,6 +2,8 @@ import smtplib, os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import pickle
+from pprint import pprint
+
 
 def pickledown(input, pklfile):
     with open(pklfile, 'wb') as f:
@@ -12,7 +14,7 @@ def pickleup(pklfile):
         res = pickle.load(f)
     return res
 
-def send_mail(new):
+def send_mail(new, dfdict):
     # me == my email address
     # you == recipient's email address
     me = "shadowysupercoderssc@gmail.com"
@@ -29,18 +31,33 @@ def send_mail(new):
     text = "Here are the latest articles from your custom list, updated daily."
 
     html = """\
-        <html>
-        <head></head>
-        <body>
-        <p>"""+text+"""</p>
-        <h2>From <a href='http://syedsoutsidethebox.blogspot.com'>Outsyed The Box</a></h2><ul>"""
+               <html>
+               <head></head>
+               <body>
+               <p>""" + text + """</p>"""
     if new:
-        for n in new:
-            html = html + """<li>"""+str(n[1])+ """</li>""" +str(n[0])
+        for i, n in enumerate(new):
+            newtup = (dfdict[n[0]]['name'], dfdict[n[0]]['topic'])
+            new[i] = n + newtup
+
+        topics = sorted(list(set([n[4] for n in new])))
+        blogs = sorted(list(set([(n[3], n[4], n[0]) for n in new])))
+
+        for topic in topics:
+            html = html + f"""
+                <h1>{topic}</h1>"""
+            for blog in blogs:
+                if blog[1] in topic:
+                    html = html + f"""
+                        <ul><h2>From <a href={blog[2]}>{blog[0]}</a></h2></ul>"""
+                    for n in new:
+                        if n[0] == blog[2]:
+                            html = html + f"""<ul><li><a href={n[2]}>{n[1]}</a></ul>"""
     else:
         html = html + """<h3>No new articles, sorry!</h3>"""
+        pass
 
-    html = html+"""</ul><br>
+    html = html+"""<br>
         </body>
         </html>
         """
@@ -59,12 +76,11 @@ def send_mail(new):
         smtp_server.login(me, PASSWORD)
         smtp_server.sendmail(me, you, msg.as_string())
 
+
 if __name__ == "__main__":
-    new = [('http://syedsoutsidethebox.blogspot.com/2023/09/penipuan-harga-beras-pula-siapa-yang.html',
-            'PENIPUAN HARGA BERAS PULA !! SIAPA YANG PENIPU SEB...'),
-           ('http://syedsoutsidethebox.blogspot.com/2023/09/idrus-harun-must-answer-madani-says.html',
-            'IDRUS HARUN MUST ANSWER - MADANI SAYS "Peguam Nega...'),
-           ('http://syedsoutsidethebox.blogspot.com/2023/09/russia-destroys-2nd-british-challenger.html',
-            'Russia Destroys 2nd British Challenger 2 Tank In U...')]
-    send_mail(new)
+    new = pickleup('new.pkl')
+    dfdict = pickleup('dfdict.pkl')
+    send_mail(new, dfdict)
+
+
     
