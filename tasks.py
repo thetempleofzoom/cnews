@@ -3,7 +3,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import pickle
 from pprint import pprint
-
+from datetime import datetime, date
 
 def pickledown(input, pklfile):
     with open(pklfile, 'wb') as f:
@@ -27,8 +27,11 @@ def send_mail(new, dfdict):
     msg['From'] = me
     msg['To'] = you
 
+    last_run = pickleup('lastrun.pkl')
+
     # Create the body of the message (a plain-text and an HTML version).
-    text = "Here are the latest articles from your custom list, updated daily."
+    text = f"""Here are the newest articles from your custom list since 
+    the last email update on {last_run}."""
 
     html = """\
                <html>
@@ -76,11 +79,16 @@ def send_mail(new, dfdict):
         smtp_server.login(me, PASSWORD)
         smtp_server.sendmail(me, you, msg.as_string())
 
+    current_day = date.today().strftime("%b-%d-%Y")
+    current_time = datetime.now().strftime("%H:%M:%S")
+    last_run = current_day + ", " + current_time
+    pickledown(last_run, 'lastrun.pkl')
+    print("Update complete! Please check email")
 
 if __name__ == "__main__":
-    new = pickleup('new.pkl')
-    dfdict = pickleup('dfdict.pkl')
-    send_mail(new, dfdict)
+    # new = pickleup('new.pkl')
+    # dfdict = pickleup('dfdict.pkl')
+    # send_mail(new, dfdict)
 
 
     

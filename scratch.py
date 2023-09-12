@@ -3,7 +3,7 @@ from urllib.request import Request, urlopen
 from urllib.parse import urlparse
 from pprint import pprint
 from tasks import *
-import pickle, pandas as pd
+import pandas as pd
 
 def upload_settings():
     df = pd.read_excel("readinglist.xlsx", sheet_name="Sheet1")
@@ -91,21 +91,14 @@ def compare(snapshotnow, snapshotzero):
     return new
 
 
-#dfdict = upload_settings()
-#pickledown(dfdict, 'dfdict.pkl')
-
+dfdict = upload_settings()
+pickledown(dfdict, 'dfdict.pkl')
 #dfdict = pickleup('dfdict.pkl')
-
-#pprint(dfdict)
-#snapshotnow = getLinks(dfdict)
+snapshotnow = getLinks(dfdict)
 
 # snapshotnow = pickleup('snapshotnow.pkl')
-# snapshotzero = pickleup('dummy.pkl')
-# new = compare(snapshotnow, snapshotzero)
-#pickledown(new, 'new.pkl')
-#pickledown(snapshotnow, 'snapshotzero.pkl')
-#testnew(new, dfdict)
-#  consolidate inputs for email into one dictionary
-#  loop by topic, then by blog (w link), then new articles (title followed by longlink)
-        
-#send_mail(new, dfdict)
+snapshotzero = pickleup('snapshotzero.pkl')
+new = compare(snapshotnow, snapshotzero)
+pickledown(new, 'new.pkl')
+pickledown(snapshotnow, 'snapshotzero.pkl')
+send_mail(new, dfdict)
