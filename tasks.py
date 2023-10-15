@@ -86,6 +86,10 @@ def send_mail(new, dfdict):
     print("Update complete! Please check email")
 
 if __name__ == "__main__":
+    current_day = date.today().strftime("%b-%d-%Y")
+    current_time = datetime.now().strftime("%H:%M:%S")
+    last_run = current_day + ", " + current_time
+    pickledown(last_run, 'lastrun.pkl')
     # new = pickleup('new.pkl')
     # dfdict = pickleup('dfdict.pkl')
     # send_mail(new, dfdict)

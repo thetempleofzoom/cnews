@@ -3,6 +3,7 @@ from urllib.request import Request, urlopen
 from urllib.parse import urlparse
 import socket
 from urllib3.connection import HTTPConnection
+from pprint import pprint
 
 
 
@@ -25,18 +26,25 @@ def getLinks(url):
     response.close()
 
     soup = BeautifulSoup(content, "html.parser")
-    print(soup)
     #links = soup.find_all("a") # Find all elements with the tag <a>
-    links = soup.find_all("h2", attrs={"class": "entry-title"})
-    print(links)
+    links = soup.find_all("div", attrs={"class": "categoryArticle__content"})
+
     for link in links:
-        if link.get("href").startswith("/"):
-            res = urlparse(url)
-            longlink = res.scheme+'://'+res.netloc+link.get("href")
+        if link.name == 'a':
+            # title goes before link is changed to just the href link
+            title = link.text.strip()
+            link = link['href']
         else:
-            longlink = link.get("href")
+            title = link.find('a').text.strip()
+            link = link.find('a')['href']
+        if link.startswith("/"):
+            res = urlparse(url)
+            longlink = res.scheme+'://'+res.netloc+link
+        else:
+            #longlink = link.get("href")
+            longlink = link
+        
+        print("Link:", longlink, "Text:", title)
 
-        print("Link:", longlink, "Text:", link.string)
 
-
-getLinks("https://lynalden.com/")
+getLinks("https://oilprice.com/Latest-Energy-News/World-News/")
