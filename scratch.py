@@ -6,13 +6,13 @@ from tasks import *
 import pandas as pd
 
 def upload_settings():
-    df = pd.read_excel("readinglist.xlsx", sheet_name="Sheet1")
+    df = pd.read_excel("readinglist.xlsx", sheet_name="Sheet3")
     df.path = df.path.fillna('')
     #orient=index is key to getting all other columns into v side of things
     dfdict = df.set_index('baseurl').to_dict(orient='index')
 
     for k,v in dfdict.items():
-        #get full webpage links
+        #get full webpage links for websites with multiple pages
         if len(v['path']) == 0:
             dfdict[k]['path'] = [k]
         else:
@@ -21,10 +21,8 @@ def upload_settings():
         #convert attribute tags into dictionary item
         v['filter'] = v['filter'].split(',')
         dfdict[k]['filter'] = [cat.strip() for cat in v['filter']]
-        if v['filter'][1] == 'True': v['filter'][1] = True
-        x = iter(v['filter'])
-        v['filter'] = dict(zip(x,x))
-
+        # there can be multiple attributes to search for in a list
+        v['filter'] = {v['filter'][0]:v['filter'][1:]}
     return dfdict
 
 
@@ -48,25 +46,24 @@ def getLinks(dfdict):
                 links = []
                 tag = v['tag']
                 filter = v['filter']
-
                 dsoup = soup.find_all(tag, **filter)
 
 
                 for d in dsoup:
-                    line = d.find('a', href=True)
-                    text = line.text.strip()
-                    if not text:
-                        line = d.find('a', {'class':'BlogList-item-title'})
-                    links.append(line)
-                #pprint(links)
-
-                for link in links:
-                    title = link.text.strip() #alternatively link.get_text()
-                    if link.get("href").startswith("/"):
-                        res = urlparse(url)
-                        longlink = res.scheme+'://'+ res.netloc + link.get("href")
+                    if d.name == 'a':
+                        # title is extracted before link is transformed to just the href link
+                        title = d.text
+                        link = d['href']
                     else:
-                        longlink = link.get("href")
+                        title = d.find('a').text
+                        link = d.find('a')['href']
+                    if link.startswith("/"):
+                        res = urlparse(url)
+                        longlink = res.scheme + '://' + res.netloc + link
+                    else:
+                        longlink = link
+                    title = title.strip().splitlines()[0]
+                    print("Link:", longlink, "Text:", title)
                     snapshotnow.append((k, title, longlink))
         except:
             print(f"error with {v['name']}. continuing to the next link..")
@@ -75,7 +72,6 @@ def getLinks(dfdict):
 
 def compare(snapshotnow, snapshotzero):
     # compare snapshot against current links
-
     #use url as unique identifier
     previous = []
     for s in snapshotzero:
@@ -87,18 +83,14 @@ def compare(snapshotnow, snapshotzero):
             continue
         else:
             new.append(c)
-
     return new
 
-
+lastrun = pickleup('lastrun2.pkl')
 dfdict = upload_settings()
-pickledown(dfdict, 'dfdict.pkl')
-#dfdict = pickleup('dfdict.pkl')
+pickledown(dfdict, 'dfdict2.pkl')
 snapshotnow = getLinks(dfdict)
-
-# snapshotnow = pickleup('snapshotnow.pkl')
-snapshotzero = pickleup('snapshotzero.pkl')
+snapshotzero = pickleup('snapshotzero2.pkl')
 new = compare(snapshotnow, snapshotzero)
-pickledown(new, 'new.pkl')
-pickledown(snapshotnow, 'snapshotzero.pkl')
+pickledown(new, 'new2.pkl')
+pickledown(snapshotnow, 'snapshotzero2.pkl')
 send_mail(new, dfdict)

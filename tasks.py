@@ -11,9 +11,13 @@ def pickledown(input, pklfile):
 
 def pickleup(pklfile):
     with open(pklfile, 'rb') as f:
-        res = pickle.load(f)
+        try:
+            res = pickle.load(f)
+        except EOFError:
+            res = []
     return res
 
+#lastrun variable needs to be adjusted
 def send_mail(new, dfdict):
     # me == my email address
     # you == recipient's email address
@@ -27,7 +31,9 @@ def send_mail(new, dfdict):
     msg['From'] = me
     msg['To'] = you
 
-    last_run = pickleup('lastrun.pkl')
+    last_run = pickleup("lastrun2.pkl")
+    if last_run == []:
+        last_run = "(N/A) - this is first run"
 
     # Create the body of the message (a plain-text and an HTML version).
     text = f"""Here are the newest articles from your custom list since 
@@ -82,7 +88,7 @@ def send_mail(new, dfdict):
     current_day = date.today().strftime("%b-%d-%Y")
     current_time = datetime.now().strftime("%H:%M:%S")
     last_run = current_day + ", " + current_time
-    pickledown(last_run, 'lastrun.pkl')
+    pickledown(last_run, 'lastrun2.pkl')
     print("Update complete! Please check email")
 
 if __name__ == "__main__":

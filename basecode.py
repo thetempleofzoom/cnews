@@ -27,24 +27,23 @@ def getLinks(url):
 
     soup = BeautifulSoup(content, "html.parser")
     #links = soup.find_all("a") # Find all elements with the tag <a>
-    links = soup.find_all("div", attrs={"class": "categoryArticle__content"})
-
+    links = soup.find_all('a', attrs={'class':['headline']})
+    #print(links)
     for link in links:
         if link.name == 'a':
             # title goes before link is changed to just the href link
-            title = link.text.strip()
+            title = link.text
             link = link['href']
         else:
-            title = link.find('a').text.strip()
+            title = link.find('a').text
             link = link.find('a')['href']
         if link.startswith("/"):
             res = urlparse(url)
             longlink = res.scheme+'://'+res.netloc+link
         else:
-            #longlink = link.get("href")
             longlink = link
-        
+        title = title.strip().splitlines()[0]
         print("Link:", longlink, "Text:", title)
 
 
-getLinks("https://oilprice.com/Latest-Energy-News/World-News/")
+getLinks("https://www.gcaptain.com")
