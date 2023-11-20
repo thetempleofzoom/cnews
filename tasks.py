@@ -1,9 +1,9 @@
-import smtplib, os
+import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import pickle
-from pprint import pprint
 from datetime import datetime, date
+from inputs import *
 
 def pickledown(input, pklfile):
     with open(pklfile, 'wb') as f:
@@ -17,13 +17,13 @@ def pickleup(pklfile):
             res = []
     return res
 
-#lastrun variable needs to be adjusted
-def send_mail(new, dfdict):
+# *** fix so that separate email sent to indiv users ***
+def send_mail(new, dfdict, togglelist):
     # me == my email address
     # you == recipient's email address
-    me = "shadowysupercoderssc@gmail.com"
-    you = "shadowysupercoderssc@gmail.com"
-    PASSWORD = os.environ.get('SSCPW')
+    me = emailfrom
+    you = emailto
+    PASSWORD = pw
 
     # Create message container - the correct MIME type is multipart/alternative.
     msg = MIMEMultipart('alternative')
@@ -31,7 +31,7 @@ def send_mail(new, dfdict):
     msg['From'] = me
     msg['To'] = you
 
-    last_run = pickleup("lastrun2.pkl")
+    last_run = pickleup(togglelist[4])
     if last_run == []:
         last_run = "(N/A) - this is first run"
 
@@ -81,21 +81,21 @@ def send_mail(new, dfdict):
     #msg.attach(part1)
     msg.attach(part2)
 
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
+    with smtplib.SMTP_SSL(server,port) as smtp_server:
         smtp_server.login(me, PASSWORD)
         smtp_server.sendmail(me, you, msg.as_string())
 
     current_day = date.today().strftime("%b-%d-%Y")
     current_time = datetime.now().strftime("%H:%M:%S")
     last_run = current_day + ", " + current_time
-    pickledown(last_run, 'lastrun2.pkl')
+    pickledown(last_run, togglelist[4])
     print("Update complete! Please check email")
 
 if __name__ == "__main__":
     current_day = date.today().strftime("%b-%d-%Y")
     current_time = datetime.now().strftime("%H:%M:%S")
     last_run = current_day + ", " + current_time
-    pickledown(last_run, 'lastrun.pkl')
+    pickledown(last_run, pkllastrun)
     # new = pickleup('new.pkl')
     # dfdict = pickleup('dfdict.pkl')
     # send_mail(new, dfdict)

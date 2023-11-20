@@ -21,13 +21,13 @@ def getLinks(url):
     USER_AGENT = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5'
     request = Request(url)
     request.add_header('User-Agent', USER_AGENT)
-    response = urlopen(request, timeout=200)
+    response = urlopen(request, timeout=30)
     content = response.read().decode('utf-8')
     response.close()
 
     soup = BeautifulSoup(content, "html.parser")
     #links = soup.find_all("a") # Find all elements with the tag <a>
-    links = soup.find_all('a', attrs={'class':['headline']})
+    links = soup.find_all('h2', attrs={'itemprop':['headline']})
     #print(links)
     for link in links:
         if link.name == 'a':
@@ -46,4 +46,4 @@ def getLinks(url):
         print("Link:", longlink, "Text:", title)
 
 
-getLinks("https://www.gcaptain.com")
+getLinks("https://www.macrovoices.com")
